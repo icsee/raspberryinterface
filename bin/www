@@ -137,3 +137,9 @@ function onListening() {
   console.log("Listening on http://localhost:" + port);
   debug("Listening on " + bind);
 }
+
+//AQUI VA LO DEL SerialPort.
+/*
+Por favor, adjuntar aquí el objeto construido...
+{}
+*/
