@@ -4,17 +4,44 @@
  * Module dependencies.
  */
 
+const SOCKET_MESSAGES = {
+  FETCH: "FETCH",
+  SET_GROUP: "SET_GROUP",
+  GET_LAST_USER: "GET_LAST_USER",
+  NEW_LAST_USER: "NEW_LAST_USER",
+  ADD_HISTORY: "ADD_HISTORY",
+  ADD_USER: "ADD_USER",
+  GET_TEMPERATURE: "GET_TEMPERATURE",
+};
+
 var app = require("../app");
 var debug = require("debug")("rasberrysocket:server");
 var http = require("http");
 var config = require("../config.json");
-
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(config.port || "3000");
-app.set("port", port);
+var port = normalizePort(config.port || "4000");
+
+const SerialPort = require("serialport");
+const Readline = SerialPort.parsers.Readline;
+
+const portCOM = new SerialPort(config.portCOM, { baudRate: 9600 });
+const parser = new Readline();
+portCOM.pipe(parser);
+
+portCOM.on("open", () => {
+  console.log("Conectado al puerto.");
+});
+
+portCOM.on("close", () => {
+  console.log("Se cerró la conexión.");
+});
+
+portCOM.on("error", () => {
+  console.log("Se perdió la conexión.");
+});
 
 /**
  * Create HTTP server.
@@ -36,26 +63,16 @@ const getApiAndEmit = (socket) => {
 
 const addSocketEvents = (socket) => {
   socket.on("message", (msg) => {
-    console.log(msg);
-    if (msg.type == SOCKET_MESSAGES.FETCH) {
-      socket.fromType = SOCKET_MESSAGES.FETCH;
-      server.clients.forEach((client) => {
-        if (client.fromType == SOCKET_MESSAGES.FETCH) {
-          client.emit("message", { type: SOCKET_MESSAGES.FETCH, data: null });
-        }
-      });
+    if (msg.type == SOCKET_MESSAGES.GET_TEMPERATURE) {
+      portCOM.write("t\n");
     } else if (msg.type == SOCKET_MESSAGES.SET_GROUP) {
       socket.dispositivo = msg.dispositivo;
-    } else if (msg.type == SOCKET_MESSAGES.ADD_HISTORY) {
-      server.clients.forEach((client) => {
-        console.log(
-          client.dispositivo,
-          "SE ENVIA A ESTE DISPOSITIVO:",
-          msg.dispositivo
-        );
-        if (client.dispositivo == msg.dispositivo) {
-          server.sendLastUser(client, msg);
-        }
+      parser.on("data", function (temperature) {
+        socket.emit("message", {
+          type: SOCKET_MESSAGES.GET_TEMPERATURE,
+          temperature: temperature,
+        });
+        portCOM.write("r\n");
       });
     }
   });
@@ -65,13 +82,13 @@ const addSocketEvents = (socket) => {
 };
 
 //Socket evetns...
-// const io = require("socket.io")(server);
-// io.on("connection", (socket) => {
-//   console.log("Se conectó un usuario nuevo: ", socket.id);
-//   getApiAndEmit(socket);
-//   addSocketEvents(socket);
-//   clients.push(socket);
-// });
+const io = require("socket.io")(server);
+io.on("connection", (socket) => {
+  console.log("Se conectó un usuario nuevo: ", socket.id);
+  getApiAndEmit(socket);
+  addSocketEvents(socket);
+  clients.push(socket);
+});
 
 /**
  * Listen on provided port, on all network interfaces.
