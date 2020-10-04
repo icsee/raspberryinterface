@@ -1,4 +1,4 @@
 {
-    "port": 4000,
-    "portCOM": "COM4"
+    "port": 3000,
+    "portCOM": "COM6"
 }
