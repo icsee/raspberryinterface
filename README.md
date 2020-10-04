@@ -16,5 +16,7 @@ Una vez terminado el comando anterior ejecute el siguiente para correr el servid
 ```string 
 $ npm start
 ```
+# Configurar puerto COM / Conexión con Arduino
+Para realizar esta configuración, solo acceda a esta línea del archivo config.json: https://github.com/Jhonjaider1000/rasberryinterface/blob/ec107fcf038f3c90e78ca3f1274be738e6c40a6c/config.json#L3 y actualice ese parámetro por el puerto al que se va a conectar por defecto.
 
 Finalmente acceda en el navegador al http://localhost:3000 o el puerto que haya configurado.
