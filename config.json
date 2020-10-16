@@ -1,4 +1,4 @@
 {
   "port": 80,
-  "portCOM": "COM6"
+  "portCOM": "/dev/ttyACM0"
 }
